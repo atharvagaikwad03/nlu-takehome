@@ -1,0 +1,24 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# environment
+.env
+.venv/
+venv/
+
+# data — CSVs are large and not part of the deliverable source
+data/*.csv
+
+# os
+.DS_Store
+
+# local docs not for submission
+INTERVIEW_PREP.md
+COMMENTING_GUIDE.md
+
+# logs
+*.log
