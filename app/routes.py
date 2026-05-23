@@ -83,3 +83,34 @@ def postComment(address: str):
             "created_at": row["created_at"].isoformat(),
         }
     ), 201
+
+
+@bp.route("/property/scofflaws/violations")
+def scofflawViolations():
+    since = request.args.get("since")
+    try:
+        since = validateSince(since)
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+
+    rows = query(
+        """
+        SELECT DISTINCT v.address_normalized
+        FROM violations v
+        JOIN scofflaws s ON s.address_normalized = v.address_normalized
+        WHERE v.violation_date >= %s
+        ORDER BY v.address_normalized
+        """,
+        (since,),
+    )
+
+    # join on exact normalized address string — no fuzzy match needed here
+    addresses = [r["address_normalized"] for r in rows]
+
+    return jsonify(
+        {
+            "since": since,
+            "count": len(addresses),
+            "addresses": addresses,
+        }
+    )
