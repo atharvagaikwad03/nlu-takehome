@@ -49,3 +49,37 @@ def getProperty(address: str):
             "SCOFFLAW": bool(isScofflawRows),
         }
     )
+
+
+@bp.route("/property/<path:address>/comments/", methods=["POST"])
+def postComment(address: str):
+    body = request.get_json(silent=True)
+    if body is None:
+        return jsonify({"error": "Request body must be valid JSON"}), 400
+
+    try:
+        author = sanitizeAuthor(body.get("author"))
+        comment = sanitizeComment(body.get("comment"))
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+
+    norm = normalizeAddress(address)
+
+    row = executeReturning(
+        """
+        INSERT INTO comments (address_normalized, author, comment_text)
+        VALUES (%s, %s, %s)
+        RETURNING id, created_at
+        """,
+        (norm, author, comment),
+    )
+
+    return jsonify(
+        {
+            "message": "Comment created",
+            "id": row["id"],
+            "address": address.strip(),
+            "author": author,
+            "created_at": row["created_at"].isoformat(),
+        }
+    ), 201
