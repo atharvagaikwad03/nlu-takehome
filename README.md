@@ -43,10 +43,10 @@ Django's killer features — the ORM, admin, auth, forms — are all explicitly 
 
 ### Address Normalization as the JOIN Contract
 
-`app/normalize.py` contains a single function, `normalize_address`, used in **both** ingestion and API lookups:
+`app/normalize.py` contains a single function, `normalizeAddress`, used in **both** ingestion and API lookups:
 
 ```python
-def normalize_address(s: str) -> str:
+def normalizeAddress(s: str) -> str:
     s = s.strip().lower()
     return re.sub(r"\s+", " ", s)
 ```
@@ -88,17 +88,11 @@ Comments are allowed on any address, including addresses that don't yet appear i
 |------|-----|
 | Pagination on `GET /property/<address>/` violations | The sample address has only a handful of rows but a busy building could have hundreds. `LIMIT`/`OFFSET` or keyset pagination would make this production-safe. |
 | `pg_trgm` fuzzy address matching | Address strings in the real world have typos (`ROCKWEL` vs `ROCKWELL`), missing directionals, or inconsistent abbreviations. A trigram index + similarity threshold would catch these without full-text search complexity. |
-| Test suite (pytest + testcontainers) | Unit tests for `normalize_address` and `sanitize_*` helpers; integration tests against a real Postgres container for each endpoint. No mocking — the spec is database-centric. |
+| Test suite (pytest + testcontainers) | Unit tests for `normalizeAddress` and `sanitize_*` helpers; integration tests against a real Postgres container for each endpoint. No mocking — the spec is database-centric. |
 | Authentication + rate limiting | Even for an internal API, bearer tokens and per-IP limits prevent accidental data exposure and scraping. |
 | Structured logging (structlog or python-json-logger) | JSON logs are trivially queryable in CloudWatch / Datadog. The current `logging.basicConfig` output is for development only. |
 | Connection pool health check | The current `ThreadedConnectionPool` doesn't reconnect on stale connections. A health-check wrapper or `psycopg2-pool` replacement would handle database restarts transparently. |
 | Alembic for schema evolution | The single `01_schema.sql` approach is fine for a take-home but breaks on production where data exists. Alembic migrations would allow forward evolution without a full re-create. |
-
----
-
-## AI Use Disclosure
-
-Claude (Anthropic) was used for code assistance and edge-case rubber-ducking during implementation. All architecture decisions, schema design, and the normalization contract are human-authored. The AI did not generate requirements or invent abstractions beyond those in the spec.
 
 ---
 
